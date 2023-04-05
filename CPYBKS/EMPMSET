@@ -1,0 +1,74 @@
+       01  EMPMAPI.
+           02  FILLER PIC X(12).
+           02  TRANIDL    COMP  PIC  S9(4).
+           02  TRANIDF    PICTURE X.
+           02  FILLER REDEFINES TRANIDF.
+             03 TRANIDA    PICTURE X.
+           02  TRANIDI  PIC X(4).
+           02  DATEL    COMP  PIC  S9(4).
+           02  DATEF    PICTURE X.
+           02  FILLER REDEFINES DATEF.
+             03 DATEA    PICTURE X.
+           02  DATEI  PIC X(10).
+           02  TIMEL    COMP  PIC  S9(4).
+           02  TIMEF    PICTURE X.
+           02  FILLER REDEFINES TIMEF.
+             03 TIMEA    PICTURE X.
+           02  TIMEI  PIC X(10).
+           02  EMPNOL    COMP  PIC  S9(4).
+           02  EMPNOF    PICTURE X.
+           02  FILLER REDEFINES EMPNOF.
+             03 EMPNOA    PICTURE X.
+           02  EMPNOI  PIC X(6).
+           02  EFNAMEL    COMP  PIC  S9(4).
+           02  EFNAMEF    PICTURE X.
+           02  FILLER REDEFINES EFNAMEF.
+             03 EFNAMEA    PICTURE X.
+           02  EFNAMEI  PIC X(10).
+           02  ELNAMEL    COMP  PIC  S9(4).
+           02  ELNAMEF    PICTURE X.
+           02  FILLER REDEFINES ELNAMEF.
+             03 ELNAMEA    PICTURE X.
+           02  ELNAMEI  PIC X(10).
+           02  EADDRL    COMP  PIC  S9(4).
+           02  EADDRF    PICTURE X.
+           02  FILLER REDEFINES EADDRF.
+             03 EADDRA    PICTURE X.
+           02  EADDRI  PIC X(10).
+           02  EPHNOL    COMP  PIC  S9(4).
+           02  EPHNOF    PICTURE X.
+           02  FILLER REDEFINES EPHNOF.
+             03 EPHNOA    PICTURE X.
+           02  EPHNOI  PIC X(10).
+           02  MESSAGEL    COMP  PIC  S9(4).
+           02  MESSAGEF    PICTURE X.
+           02  FILLER REDEFINES MESSAGEF.
+             03 MESSAGEA    PICTURE X.
+           02  MESSAGEI  PIC X(79).
+           02  DUMMYL    COMP  PIC  S9(4).
+           02  DUMMYF    PICTURE X.
+           02  FILLER REDEFINES DUMMYF.
+             03 DUMMYA    PICTURE X.
+           02  DUMMYI  PIC X(1).
+       01  EMPMAPO REDEFINES EMPMAPI.
+           02  FILLER PIC X(12).
+           02  FILLER PICTURE X(3).
+           02  TRANIDO  PIC X(4).
+           02  FILLER PICTURE X(3).
+           02  DATEO  PIC X(10).
+           02  FILLER PICTURE X(3).
+           02  TIMEO  PIC X(10).
+           02  FILLER PICTURE X(3).
+           02  EMPNOO  PIC X(6).
+           02  FILLER PICTURE X(3).
+           02  EFNAMEO  PIC X(10).
+           02  FILLER PICTURE X(3).
+           02  ELNAMEO  PIC X(10).
+           02  FILLER PICTURE X(3).
+           02  EADDRO  PIC X(10).
+           02  FILLER PICTURE X(3).
+           02  EPHNOO  PIC X(10).
+           02  FILLER PICTURE X(3).
+           02  MESSAGEO  PIC X(79).
+           02  FILLER PICTURE X(3).
+           02  DUMMYO  PIC X(1).

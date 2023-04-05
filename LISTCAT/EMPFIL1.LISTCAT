@@ -1,0 +1,105 @@
+IDCAMS  SYSTEM SERVICES                                           TIME: 17:07:39
+CLUSTER ------- AWS.M2.EMPDEMO.VSAM.KSDS                                        
+     IN-CAT --- CATALOG.AWSUSERS.AWS1                                           
+     HISTORY                                                                    
+       DATASET-OWNER-----(NULL)     CREATION--------2022.280                    
+       RELEASE----------------2     EXPIRATION------0000.000                    
+     SMSDATA                                                                    
+       STORAGECLASS -----SCTECH     MANAGEMENTCLASS---(NULL)                    
+       DATACLASS --------(NULL)     LBACKUP ---2022.293.0615                    
+       CA-RECLAIM---------(YES)                                                 
+       EATTR-------------(NULL)                                                 
+       BWO STATUS------00000000     BWO TIMESTAMP---00000 00:00:00.0            
+       BWO---------------(NULL)                                                 
+     RLSDATA                                                                    
+       LOG ----------------(NULL)   RECOVERY REQUIRED --(NO)     FRLOG ------------(NULL)
+       VSAM QUIESCED -------(NO)    RLS IN USE ---------(NO)     LOGREPLICATE-------------(NO)
+       LOGSTREAMID-----------------------------(NULL)                
+       RECOVERY TIMESTAMP LOCAL-----X'0000000000000000'              
+       RECOVERY TIMESTAMP GMT-------X'0000000000000000'              
+       DATABASE -----------------(NULL)                              
+     ENCRYPTIONDATA                                                  
+       DATA SET ENCRYPTION-----(NO)                                  
+     PROTECTION-PSWD-----(NULL)     RACF----------------(NO)         
+     ASSOCIATIONS                                                    
+       DATA-----AWS.M2.EMPDEMO.VSAM.KSDS.DAT                         
+       INDEX----AWS.M2.EMPDEMO.VSAM.KSDS.IDX                         
+   DATA ------- AWS.M2.EMPDEMO.VSAM.KSDS.DAT                         
+     IN-CAT --- CATALOG.AWSUSERS.AWS1                                
+     HISTORY                                                         
+       DATASET-OWNER-----(NULL)     CREATION--------2022.280         
+       RELEASE----------------2     EXPIRATION------0000.000         
+       ACCOUNT-INFO-----------------------------------(NULL)         
+     PROTECTION-PSWD-----(NULL)     RACF----------------(NO)                    
+     ASSOCIATIONS                                                               
+       CLUSTER--AWS.M2.EMPDEMO.VSAM.KSDS                                        
+     ATTRIBUTES                                                                 
+       KEYLEN-----------------6     AVGLRECL--------------80     BUFSPACE-----------24576     CISIZE--------------8192
+       RKP--------------------0     MAXLRECL--------------80     EXCPEXIT----------(NULL)     CI/CA-----------------90
+       SHROPTNS(1,3)   RECOVERY     UNIQUE           NOERASE     INDEXED       NOWRITECHK     UNORDERED          REUSE
+       NONSPANNED                                                               
+     STATISTICS                                                                 
+       REC-TOTAL--------------4     SPLITS-CI--------------0     EXCPS-----------------19
+       REC-DELETED------------0     SPLITS-CA--------------0     EXTENTS----------------1
+       REC-INSERTED-----------1     FREESPACE-%CI---------10     SYSTEM-TIMESTAMP:
+       REC-UPDATED-----------11     FREESPACE-%CA---------15          X'DC47110B21489E42'
+       REC-RETRIEVED--------325     FREESPC----------2203648                    
+     ALLOCATION                                                                 
+       SPACE-TYPE------CYLINDER     HI-A-RBA---------2211840                
+       SPACE-PRI--------------3     HI-U-RBA----------737280                    
+       SPACE-SEC--------------1                                                 
+IDCAMS  SYSTEM SERVICES                                           TIME: 17:07:39
+     VOLUME                                                                     
+       VOLSER------------AWS1T6     PHYREC-SIZE---------8192     HI-A-RBA---------2211840     EXTENT-NUMBER----------1
+       DEVTYPE------X'3010200F'     PHYRECS/TRK------------6     HI-U-RBA----------737280     EXTENT-TYPE--------X'00'
+       VOLFLAG------------PRIME     TRACKS/CA-------------15                    
+       EXTENTS:                                                                 
+       LOW-CCHH-----X'00420000'     LOW-RBA----------------0     TRACKS----------------45
+       HIGH-CCHH----X'0044000E'     HIGH-RBA---------2211839                    
+   INDEX ------ AWS.M2.EMPDEMO.VSAM.KSDS.IDX                                    
+     IN-CAT --- CATALOG.AWSUSERS.AWS1                                           
+     HISTORY                                                                    
+       DATASET-OWNER-----(NULL)     CREATION--------2022.280                    
+       RELEASE----------------2     EXPIRATION------0000.000                    
+     PROTECTION-PSWD-----(NULL)     RACF----------------(NO)                    
+     ASSOCIATIONS                                                     
+       CLUSTER--AWS.M2.EMPDEMO.VSAM.KSDS                                        
+     ATTRIBUTES                                                                 
+       KEYLEN-----------------6     AVGLRECL---------------0     BUFSPACE---------------0     CISIZE--------------8192
+       RKP--------------------0     MAXLRECL------------8185     EXCPEXIT----------(NULL)     CI/CA------------------6
+       SHROPTNS(1,3)   RECOVERY     UNIQUE           NOERASE     NOWRITECHK     UNORDERED     REUSE
+     STATISTICS                                                                 
+       REC-TOTAL--------------1     SPLITS-CI--------------0     EXCPS------------------5     INDEX:
+       REC-DELETED------------0     SPLITS-CA--------------0     EXTENTS----------------1     LEVELS-----------------1
+       REC-INSERTED-----------0     FREESPACE-%CI----------0     SYSTEM-TIMESTAMP:            ENTRIES/SECT-----------9
+       REC-UPDATED------------0     FREESPACE-%CA----------0          X'DC47110B21489E42' SEQ-SET-RBA----------------0
+       REC-RETRIEVED----------0     FREESPC------------40960                              HI-LEVEL-RBA---------------0 
+     ALLOCATION                                                                 
+       SPACE-TYPE---------TRACK     HI-A-RBA-----------49152                    
+       SPACE-PRI--------------1     HI-U-RBA------------8192                    
+       SPACE-SEC--------------1                                                 
+     VOLUME                                
+       VOLSER------------AWS1T6     PHYREC-SIZE---------8192     HI-A-RBA-----------49152     EXTENT-NUMBER----------1
+       DEVTYPE------X'3010200F'     PHYRECS/TRK------------6     HI-U-RBA------------8192     EXTENT-TYPE--------X'00'
+       VOLFLAG------------PRIME     TRACKS/CA--------------1                    
+       EXTENTS:                                                                 
+       LOW-CCHH-----X'001A000D'     LOW-RBA----------------0     TRACKS-----------------1
+       HIGH-CCHH----X'001A000D'     HIGH-RBA-----------49151                    
+IDCAMS  SYSTEM SERVICES                                           TIME: 17:07:39                                         
+         THE NUMBER OF ENTRIES PROCESSED WAS:                                   
+                   AIX -------------------0                                     
+                   ALIAS -----------------0                                     
+                   CLUSTER ---------------1                                     
+                   DATA ------------------1                                     
+                   GDG -------------------0                                     
+                   INDEX -----------------1                                     
+                   NONVSAM ---------------0                                     
+                   PAGESPACE -------------0                                     
+                   PATH ------------------0                                     
+                   SPACE -----------------0                                     
+                   USERCATALOG -----------0                                     
+                   TAPELIBRARY -----------0                                     
+                   TAPEVOLUME ------------0                                     
+                   TOTAL -----------------3                                     
+         THE NUMBER OF PROTECTED ENTRIES SUPPRESSED WAS 0                       
+IDC0001I FUNCTION COMPLETED, HIGHEST CONDITION CODE WAS 0    

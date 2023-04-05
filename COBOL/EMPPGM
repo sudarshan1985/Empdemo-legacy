@@ -1,0 +1,550 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. EMPPGM.
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       COPY EMPMSET.
+       COPY DFHBMSCA.
+       COPY DFHAID.
+       01 FS-EMPREC.
+          02 EMPNO     PIC 9(6).
+          02 EFNAME    PIC X(10).
+          02 ELNAME    PIC X(10).
+          02 EADDR     PIC X(10).
+          02 EPHNO     PIC X(10).
+          02 FILLER    PIC X(34) VALUE ' '.
+       01  SWITCHES.
+           05  VALID-DATA-SW               PIC X(01)   VALUE 'Y'.
+               88  VALID-DATA                          VALUE 'Y'.
+           05  EMP-FOUND-SW                PIC X(01)   VALUE 'Y'.
+               88  EMP-FOUND                           VALUE 'Y'.
+       01  FLAGS.
+           05  DISPLAY-FLAG                PIC X(01).
+               88  DISPLAY-NEW-EMP                     VALUE '1'.
+               88  DISPLAY-SPACES                      VALUE '2'.
+               88  DISPLAY-LOW-VALUES                  VALUE '3'.
+           05  SEND-FLAG                   PIC X(01).
+               88  SEND-ERASE                          VALUE '1'.
+               88  SEND-DATAONLY                       VALUE '2'.
+               88  SEND-ERROR                          VALUE '3'.
+       01 EXIT-MSG PIC X(34) VALUE
+                     'CESF LOGOFF PRESS ENTER FOR LOGOFF'.
+       01 COMMAREA-AREA.
+          05 CA-EMPNO PIC X(6).
+       01 CURRENT-TIME.
+         05 TSTAMP         PIC S9(14) COMP.
+         05 OUTDATE        PIC X(10).
+         05 OUTTIME        PIC X(8).
+       01 RESPCODE         PIC S9(8) COMP.
+       LINKAGE SECTION.
+       01 DFHCOMMAREA.
+          05 DFH-EMPNO     PIC X(6).
+       PROCEDURE DIVISION.
+       000-MAIN-PARA.
+           EXEC CICS HANDLE CONDITION
+                NOTFND(0000-TERMINATE-PROGRAM)
+                ERROR(0000-TERMINATE-PROGRAM)
+           END-EXEC.
+           PERFORM 050-ASKTIMEPARA.
+           INITIALIZE FS-EMPREC.
+            IF EIBCALEN = 0
+                MOVE LOW-VALUES TO COMMAREA-AREA
+                MOVE LOW-VALUES TO EMPMAPI
+                SET SEND-ERASE TO TRUE
+                PERFORM 500-SEND-PARA
+            ELSE
+            EVALUATE EIBAID
+             WHEN DFHPF1   PERFORM 100-READPARA
+             WHEN DFHPF2   PERFORM 200-WRITEPARA
+             WHEN DFHPF3   PERFORM 300-EXITPARA
+             WHEN DFHPF4   PERFORM 400-UPDATEPARA
+             WHEN DFHPF5   PERFORM 600-DELETEPARA
+             WHEN DFHPF6   PERFORM 600-CLEARPARA
+             WHEN DFHPF7   PERFORM 700-READPREVPARA
+             WHEN DFHPF8   PERFORM 800-READNEXTPARA
+             WHEN DFHENTER PERFORM 000-BROWSEPARA
+             WHEN DFHPF10  PERFORM 450-CONF-UPDATE
+             WHEN OTHER
+                  MOVE SPACES    TO MESSAGEO
+                  MOVE 'Invalid Key Pressed' TO MESSAGEO
+                  SET SEND-ERROR TO TRUE
+                  MOVE -1 TO EMPNOL
+                  PERFORM 500-SEND-PARA
+            END-EVALUATE
+           END-IF.
+           PERFORM 800-RETURN-PARA.
+           GOBACK.
+      **************************************************************
+       050-ASKTIMEPARA.
+           EXEC CICS
+                ASKTIME
+                ABSTIME(TSTAMP)
+           END-EXEC
+           EXEC CICS
+                FORMATTIME
+                ABSTIME(TSTAMP)
+                YYYYMMDD(OUTDATE)
+                DATESEP('/')
+                TIME(OUTTIME)
+                TIMESEP(':')
+           END-EXEC
+           .
+      **************************************************************
+       050-MOVEPARA.
+           MOVE EIBTRNID TO TRANIDO.
+           MOVE OUTDATE TO DATEO
+           MOVE OUTTIME TO TIMEO
+           .
+      **************************************************************
+       000-BROWSEPARA.
+           PERFORM 110-RECEIVE-PARA.
+           PERFORM 120-VALIDATE-EMPNO.
+           IF VALID-DATA
+              CONTINUE
+           ELSE
+              SET SEND-ERROR TO TRUE
+              MOVE -1 TO EMPNOL
+              PERFORM 500-SEND-PARA
+           END-IF
+           MOVE EMPNOI TO EMPNO
+           PERFORM 010-START-EMP-BROWSE.
+           IF EMP-FOUND
+               PERFORM 020-READ-NEXT-EMP
+           END-IF.
+           PERFORM 030-END-EMP-BROWSE.
+           IF EMP-FOUND
+               SET SEND-DATAONLY TO TRUE
+               MOVE EMPNO TO CA-EMPNO
+               PERFORM 500-SEND-PARA
+           ELSE
+               SET SEND-ERROR TO TRUE
+               MOVE -1 TO EMPNOL
+               PERFORM 500-SEND-PARA
+           END-IF.
+      **************************************************************
+       100-READPARA.
+           MOVE SPACES TO MESSAGEO.
+           PERFORM 110-RECEIVE-PARA.
+           MOVE 'Y' TO VALID-DATA-SW.
+           PERFORM 120-VALIDATE-EMPNO.
+           IF VALID-DATA
+              CONTINUE
+           ELSE
+              SET SEND-ERROR TO TRUE
+              MOVE -1 TO EMPNOL
+              PERFORM 500-SEND-PARA
+           END-IF
+           MOVE EMPNOI TO EMPNO
+           EXEC CICS
+                READ FILE('EMPFIL1') INTO(FS-EMPREC) RIDFLD(EMPNO)
+                RESP(RESPCODE)
+           END-EXEC
+           IF RESPCODE = DFHRESP(NORMAL)
+              MOVE SPACES TO MESSAGEO
+              SET SEND-DATAONLY TO TRUE
+              PERFORM 500-SEND-PARA
+           ELSE
+              MOVE 'Record Not found' to MESSAGEO
+              SET SEND-ERROR TO TRUE
+              MOVE -1 TO EMPNOL
+              PERFORM 500-SEND-PARA
+           END-IF.
+       110-RECEIVE-PARA.
+           MOVE LOW-VALUES TO EMPMAPI , FS-EMPREC , CA-EMPNO
+           EXEC CICS
+                RECEIVE MAP('EMPMAP') MAPSET('EMPMSET')
+           END-EXEC
+           INSPECT EMPNOI
+               REPLACING ALL '_' BY SPACE.
+       120-VALIDATE-EMPNO.
+           IF       EMPNOL = ZERO
+                 OR EMPNOI = SPACE
+               MOVE 'N' TO VALID-DATA-SW
+               MOVE LOW-VALUES TO EMPMAPO
+               MOVE 'You must enter a EMP number.'
+                   TO MESSAGEO
+           END-IF.
+      **************************************************************
+       200-WRITEPARA.
+           MOVE SPACES TO MESSAGEO.
+           PERFORM 110-RECEIVE-PARA.
+           MOVE 'Y' TO VALID-DATA-SW.
+           PERFORM 120-VALIDATE-EMPNO.
+           IF VALID-DATA
+              CONTINUE
+           ELSE
+              SET SEND-ERROR TO TRUE
+              MOVE -1 TO EMPNOL
+              PERFORM 500-SEND-PARA
+           END-IF
+           MOVE EMPNOI TO EMPNO
+           EXEC CICS
+                READ FILE('EMPFIL1') INTO(FS-EMPREC) RIDFLD(EMPNO)
+                RESP(RESPCODE)
+           END-EXEC
+           IF RESPCODE = DFHRESP(NORMAL)
+              MOVE 'Record Already Exists' TO MESSAGEO
+              SET SEND-DATAONLY TO TRUE
+              MOVE EMPNO TO CA-EMPNO
+              PERFORM 500-SEND-PARA
+           ELSE IF RESPCODE = DFHRESP(NOTFND)
+                   PERFORM 150-VALIDATE-INPUT
+                   IF VALID-DATA
+                      INITIALIZE  FS-EMPREC
+                      PERFORM 170-MOVE-MAP-REC-PARA
+                      EXEC CICS WRITE
+                         FILE('EMPFIL1') FROM(FS-EMPREC) RIDFLD(EMPNO)
+                         RESP(RESPCODE)
+                      END-EXEC
+                      IF RESPCODE = DFHRESP(NORMAL)
+                       MOVE 'Record Write Sucessful.' TO MESSAGEO
+                      ELSE
+                       MOVE 'Record Write Unsucessful.' TO MESSAGEO
+                      END-IF
+                   END-IF
+           ELSE
+                   PERFORM 9999-TERMINATE-PROGRAM
+                END-IF
+           END-IF.
+              SET SEND-ERROR TO TRUE
+              MOVE -1 TO EMPNOL
+              PERFORM 500-SEND-PARA.
+       150-VALIDATE-INPUT.
+           INSPECT EMPMAPI REPLACING ALL '_' BY SPACES.
+           IF EFNAMEL = ZERO OR EFNAMEI = SPACES
+               MOVE 'Please enter a valid first name.'
+                   TO MESSAGEO
+               MOVE -1 TO EFNAMEL
+               SET SEND-ERROR TO TRUE
+               MOVE -1 TO EMPNOL
+               PERFORM 500-SEND-PARA
+           END-IF.
+           IF ELNAMEL = ZERO OR ELNAMEI = SPACES
+               MOVE 'N' TO VALID-DATA-SW
+               MOVE 'Please enter a valid last name.'
+                   TO MESSAGEO
+               MOVE -1 TO ELNAMEL
+               SET SEND-ERROR TO TRUE
+               PERFORM 500-SEND-PARA
+           END-IF.
+           IF EADDRL = ZERO OR EADDRI = SPACES
+               MOVE 'N' TO VALID-DATA-SW
+               MOVE 'You must enter a Valid Emp Address.   '
+                   TO MESSAGEO
+               MOVE -1 TO EADDRL
+               SET SEND-ERROR TO TRUE
+               PERFORM 500-SEND-PARA
+           END-IF.
+           IF EPHNOL = ZERO OR EPHNOI = SPACES
+               MOVE 'N' TO VALID-DATA-SW
+               MOVE 'You must enter a Valid Phone Number.  '
+                   TO MESSAGEO
+               MOVE -1 TO EPHNOL
+               SET SEND-ERROR TO TRUE
+               PERFORM 500-SEND-PARA
+           END-IF.
+      **************************************************************
+       170-MOVE-MAP-REC-PARA.
+           MOVE EMPNOI  TO EMPNO.
+           MOVE EFNAMEI TO EFNAME.
+           MOVE ELNAMEI TO ELNAME.
+           MOVE EADDRI  TO EADDR.
+           MOVE EPHNOI  TO EPHNO.
+      **************************************************************
+       300-EXITPARA.
+           EXEC CICS SEND FROM(EXIT-MSG) ERASE END-EXEC.
+           EXEC CICS SEND CONTROL FREEKB END-EXEC.
+           EXEC CICS RETURN END-EXEC.
+      **************************************************************
+       400-UPDATEPARA.
+           MOVE SPACES TO MESSAGEO.
+           PERFORM 110-RECEIVE-PARA.
+           MOVE 'Y' TO VALID-DATA-SW.
+           PERFORM 120-VALIDATE-EMPNO.
+           IF VALID-DATA
+              CONTINUE
+           ELSE
+              SET SEND-ERROR TO TRUE
+              PERFORM 500-SEND-PARA
+           END-IF
+           MOVE EMPNOI TO EMPNO
+           EXEC CICS
+                READ FILE('EMPFIL1')
+                INTO (FS-EMPREC)
+                RIDFLD(EMPNO)
+                RESP(RESPCODE)
+           END-EXEC.
+           IF RESPCODE = DFHRESP(NORMAL)
+              MOVE 'Make changes then press ''F10'' to Update'
+                      TO MESSAGEO
+              SET SEND-DATAONLY TO TRUE
+              PERFORM 500-SEND-PARA
+           ELSE
+              MOVE 'Record dose Not Exists' TO MESSAGEO
+              SET SEND-ERROR TO TRUE
+              PERFORM 500-SEND-PARA
+           END-IF
+           .
+      **************************************************************
+       450-CONF-UPDATE.
+           MOVE LOW-VALUES TO EMPMAPI
+           PERFORM 470-SET-MDT
+           EXEC CICS
+                RECEIVE MAP('EMPMAP')
+                MAPSET('EMPMSET')
+           END-EXEC
+           MOVE EMPNOI TO EMPNO
+           EXEC CICS
+                READ FILE('EMPFIL1') INTO(FS-EMPREC)
+                RIDFLD(EMPNO)
+                RESP(RESPCODE)
+                UPDATE
+           END-EXEC
+           PERFORM 170-MOVE-MAP-REC-PARA
+           EXEC CICS
+                REWRITE FILE('EMPFIL1')
+                FROM(FS-EMPREC)
+                RESP(RESPCODE)
+           END-EXEC
+           IF RESPCODE = DFHRESP(NORMAL)
+             MOVE LOW-VALUES TO EMPMAPO
+             MOVE 'Record Sucessfully Updated' TO MESSAGEO
+             SET SEND-ERROR TO TRUE
+             PERFORM 500-SEND-PARA
+           ELSE
+             MOVE 'Error in rewrite ' To MESSAGEO
+             SET SEND-ERROR TO TRUE
+             PERFORM 500-SEND-PARA
+           END-IF.
+       470-SET-MDT.
+           MOVE DFHBMFSE TO EFNAMEA
+           MOVE DFHBMFSE TO ELNAMEA
+           MOVE DFHBMFSE TO EADDRA
+           MOVE DFHBMFSE TO EPHNOA.
+      **************************************************************
+       500-SEND-PARA.
+           EVALUATE TRUE
+              WHEN SEND-ERASE
+                  PERFORM 050-MOVEPARA
+                  MOVE -1 TO EMPNOL
+                  EXEC CICS SEND MAP('EMPMAP')
+                                 MAPSET('EMPMSET')
+                                 ERASE
+                                 FREEKB
+                  END-EXEC
+                  PERFORM 800-RETURN-PARA
+              WHEN SEND-DATAONLY
+                 MOVE -1 TO EMPNOL
+                 MOVE EMPNO  TO EMPNOO
+                 MOVE EFNAME TO EFNAMEO
+                 MOVE ELNAME TO ELNAMEO
+                 MOVE EADDR  TO EADDRO
+                 MOVE EPHNO  TO EPHNOO
+                 PERFORM 050-MOVEPARA
+                 EXEC CICS
+                   SEND MAP('EMPMAP')
+                   MAPSET('EMPMSET')
+                   FREEKB
+                   DATAONLY
+                 END-EXEC
+                  PERFORM 800-RETURN-PARA
+              WHEN SEND-ERROR
+                  PERFORM 050-MOVEPARA
+                  EXEC CICS SEND MAP('EMPMAP') MAPSET('EMPMSET')
+                  ERASE CURSOR FREEKB END-EXEC
+                  PERFORM 800-RETURN-PARA
+              WHEN OTHER
+                  PERFORM 800-RETURN-PARA
+            END-EVALUATE.
+       600-DELETEPARA.
+           EXEC CICS
+                RECEIVE MAP('EMPMAP')
+                MAPSET('EMPMSET')
+           END-EXEC
+           MOVE EMPNOI TO EMPNO
+           EXEC CICS
+                READ FILE('EMPFIL1')
+                INTO (FS-EMPREC)
+                RIDFLD(EMPNO)
+                RESP(RESPCODE)
+           END-EXEC
+           IF RESPCODE =  DFHRESP(NORMAL)
+              EXEC CICS
+                DELETE FILE('EMPFIL1')
+                RIDFLD(EMPNO)
+              END-EXEC
+              MOVE 'Record Deleted Sucessfully' TO MESSAGEO
+           ELSE
+              MOVE 'Record dose not Exists' TO MESSAGEO
+           END-IF.
+           SET SEND-ERROR TO TRUE
+           MOVE -1 TO EMPNOL
+           PERFORM 500-SEND-PARA.
+      **************************************************************
+
+       600-CLEARPARA.
+           MOVE LOW-VALUES TO EMPMAPO.
+           MOVE LOW-VALUES TO MESSAGEO
+           PERFORM 050-MOVEPARA
+           EXEC CICS
+                SEND MAP('EMPMAP')
+                     MAPSET('EMPMSET')
+                     FREEKB
+           END-EXEC
+           .
+      **************************************************************
+       800-RETURN-PARA.
+           EXEC CICS
+                RETURN
+                TRANSID('EMP1')
+                COMMAREA(COMMAREA-AREA)
+           END-EXEC
+           .
+       700-READPREVPARA.
+      *
+           MOVE LOW-VALUES TO EMPMAPI.
+           EXEC CICS
+                RECEIVE MAP('EMPMAP') MAPSET('EMPMSET')
+           END-EXEC
+           MOVE EMPNOI TO EMPNO
+           PERFORM 010-START-EMP-BROWSE.
+           IF EMP-FOUND
+               PERFORM 020-READ-NEXT-EMP
+               PERFORM 040-READ-PREV-EMP
+               PERFORM 040-READ-PREV-EMP
+           END-IF.
+           PERFORM 030-END-EMP-BROWSE.
+           IF EMP-FOUND
+               SET SEND-DATAONLY TO TRUE
+               PERFORM 500-SEND-PARA
+           ELSE
+               SET SEND-ERROR TO TRUE
+               MOVE -1 TO EMPNOL
+               PERFORM 500-SEND-PARA
+           END-IF.
+           MOVE EMPNO TO CA-EMPNO.
+      *
+       010-START-EMP-BROWSE.
+      *
+           EXEC CICS
+               STARTBR FILE('EMPFIL1')
+                       RIDFLD(EMPNO)
+                       RESP(RESPCODE)
+           END-EXEC.
+      *
+           IF RESPCODE = DFHRESP(NORMAL)
+               MOVE 'Y' TO EMP-FOUND-SW
+               MOVE SPACE TO MESSAGEO
+           ELSE
+               IF RESPCODE = DFHRESP(NOTFND)
+                   MOVE 'N' TO EMP-FOUND-SW
+                   MOVE 'There are no EMPs in the file.'
+                       TO MESSAGEO
+                   MOVE LOW-VALUES TO EMPMAPO
+                   SET SEND-ERROR TO TRUE
+                   MOVE -1 TO EMPNOL
+                   PERFORM 500-SEND-PARA
+               ELSE
+                   PERFORM 9999-TERMINATE-PROGRAM
+               END-IF
+           END-IF.
+      *
+       020-READ-NEXT-EMP.
+      *
+           EXEC CICS
+               READNEXT FILE('EMPFIL1')
+                        INTO(FS-EMPREC)
+                        RIDFLD(EMPNO)
+                        RESP(RESPCODE)
+           END-EXEC.
+      *
+           IF RESPCODE = DFHRESP(NORMAL)
+               MOVE 'Y' TO EMP-FOUND-SW
+           ELSE
+               IF RESPCODE = DFHRESP(ENDFILE)
+                   MOVE 'N' TO EMP-FOUND-SW
+                   MOVE 'There are no more records in the file.'
+                       TO MESSAGEO
+                   SET SEND-ERROR TO TRUE
+                   MOVE -1 TO EMPNOL
+                   PERFORM 500-SEND-PARA
+               ELSE
+                   PERFORM 9999-TERMINATE-PROGRAM
+               END-IF
+           END-IF.
+      *
+       030-END-EMP-BROWSE.
+      *
+           EXEC CICS
+               ENDBR FILE('EMPFIL1')
+               RESP(RESPCODE)
+           END-EXEC.
+      *
+           IF RESPCODE NOT = DFHRESP(NORMAL)
+               PERFORM 9999-TERMINATE-PROGRAM
+           END-IF.
+      *
+       040-READ-PREV-EMP.
+      *
+           EXEC CICS
+               READPREV FILE('EMPFIL1')
+                        INTO(FS-EMPREC)
+                        RIDFLD(EMPNO)
+                        RESP(RESPCODE)
+           END-EXEC.
+      *
+           IF RESPCODE = DFHRESP(NORMAL)
+               MOVE 'Y' TO EMP-FOUND-SW
+           ELSE
+               IF RESPCODE = DFHRESP(ENDFILE)
+                   MOVE 'N' TO EMP-FOUND-SW
+                   MOVE 'There are no more records in the file.'
+                       TO MESSAGEO
+               ELSE
+                   PERFORM 9999-TERMINATE-PROGRAM
+               END-IF
+           END-IF.
+      *********************************************************
+       800-READNEXTPARA.
+           PERFORM 110-RECEIVE-PARA.
+           PERFORM 120-VALIDATE-EMPNO.
+           IF VALID-DATA
+              CONTINUE
+           ELSE
+              SET SEND-ERROR TO TRUE
+              MOVE -1 TO EMPNOL
+              PERFORM 500-SEND-PARA
+           END-IF
+           MOVE EMPNOI TO EMPNO
+           PERFORM 010-START-EMP-BROWSE.
+           IF EMP-FOUND
+               PERFORM 020-READ-NEXT-EMP
+               PERFORM 020-READ-NEXT-EMP
+           END-IF.
+           PERFORM 030-END-EMP-BROWSE.
+           IF EMP-FOUND
+               SET SEND-DATAONLY TO TRUE
+               MOVE EMPNO TO CA-EMPNO
+               PERFORM 500-SEND-PARA
+           ELSE
+               SET SEND-DATAONLY TO TRUE
+               PERFORM 500-SEND-PARA
+           END-IF.
+      *
+       9999-TERMINATE-PROGRAM.
+      *
+      *    MOVE EIBRESP  TO ERR-RESP.
+      *    MOVE EIBRESP2 TO ERR-RESP2.
+      *    MOVE EIBTRNID TO ERR-TRNID.
+      *    MOVE EIBRSRCE TO ERR-RSRCE.
+      *
+      *    EXEC CICS
+      *        XCTL PROGRAM('SYSERR')
+      *             COMMAREA(ERROR-PARAMETERS)
+      *    END-EXEC.
+       0000-TERMINATE-PROGRAM.
+           MOVE LOW-VALUES TO EMPMAPO.
+           MOVE 'No Record To Browse ' TO MESSAGEO.
+           SET SEND-ERROR TO TRUE.
+           MOVE -1 TO EMPNOL
+           PERFORM 500-SEND-PARA.
